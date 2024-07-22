@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib.patches as patches
+import matplotlib.patheffects as path_effects
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import os
 
@@ -187,9 +188,9 @@ europe.loc[europe['ADM0_A3']=='BEL','INSET_FIG_X'] = 2.4
 europe.loc[europe['ADM0_A3']=='BEL','INSET_FIG_Y'] = 56
 
 europe.loc[europe['ADM0_A3']=='HRV','INSET_FIG_X'] = 16.9
-europe.loc[europe['ADM0_A3']=='HRV','INSET_FIG_Y'] = 44.4
+europe.loc[europe['ADM0_A3']=='HRV','INSET_FIG_Y'] = 43.7
 
-europe.loc[europe['ADM0_A3']=='AUT','INSET_FIG_X'] = 12
+europe.loc[europe['ADM0_A3']=='AUT','INSET_FIG_X'] = 12.3
 europe.loc[europe['ADM0_A3']=='AUT','INSET_FIG_Y'] = 47.5
 
 europe.loc[europe['ADM0_A3']=='ITA','INSET_FIG_X'] = 12
@@ -201,14 +202,14 @@ europe.loc[europe['ADM0_A3']=='LVA','INSET_FIG_Y'] = 58.2
 europe.loc[europe['ADM0_A3']=='LUX','INSET_FIG_X'] = 0.2
 europe.loc[europe['ADM0_A3']=='LUX','INSET_FIG_Y'] = 52.5
 
-europe.loc[europe['ADM0_A3']=='HUN','INSET_FIG_X'] = 19.45
-europe.loc[europe['ADM0_A3']=='HUN','INSET_FIG_Y'] = 47.2
+europe.loc[europe['ADM0_A3']=='HUN','INSET_FIG_X'] = 19.6
+europe.loc[europe['ADM0_A3']=='HUN','INSET_FIG_Y'] = 47.5
 
 europe.loc[europe['ADM0_A3']=='ROU','INSET_FIG_X'] = 24.2
-europe.loc[europe['ADM0_A3']=='ROU','INSET_FIG_Y'] = 46.1
+europe.loc[europe['ADM0_A3']=='ROU','INSET_FIG_Y'] = 46.5
 
 europe.loc[europe['ADM0_A3']=='BGR','INSET_FIG_X'] = 25.5
-europe.loc[europe['ADM0_A3']=='BGR','INSET_FIG_Y'] = 42.5
+europe.loc[europe['ADM0_A3']=='BGR','INSET_FIG_Y'] = 42.1
 
 europe.loc[europe['ADM0_A3']=='SVN','INSET_FIG_X'] = 5
 europe.loc[europe['ADM0_A3']=='SVN','INSET_FIG_Y'] = 40
@@ -216,9 +217,28 @@ europe.loc[europe['ADM0_A3']=='SVN','INSET_FIG_Y'] = 40
 europe.loc[europe['ADM0_A3']=='SVK','INSET_FIG_X'] = 26
 europe.loc[europe['ADM0_A3']=='SVK','INSET_FIG_Y'] = 50.5
 
+europe.loc[europe['ADM0_A3']=='EST','INSET_FIG_X'] = 25.9
+europe.loc[europe['ADM0_A3']=='EST','INSET_FIG_Y'] = 59
+
+europe.loc[europe['ADM0_A3']=='CZE','INSET_FIG_X'] = 15.8
+europe.loc[europe['ADM0_A3']=='CZE','INSET_FIG_Y'] = 49.88
+
+europe.loc[europe['ADM0_A3']=='POL','INSET_FIG_X'] = 19.6
+europe.loc[europe['ADM0_A3']=='POL','INSET_FIG_Y'] = 52
+
+europe.loc[europe['ADM0_A3']=='SWE','INSET_FIG_X'] = 15
+europe.loc[europe['ADM0_A3']=='SWE','INSET_FIG_Y'] = 62
+
 #%% iterate over entries of data and print out shape
 # print('Basic shape of Data')
 # describeData(base)
+
+#%% config
+
+thing = 'real_output_mean'
+sector_thing = 'real_sector_output_mean_nace1'
+cmap_rel = cm.coolwarm_r
+cmap_abs = cm.BuPu
 
 #%% calculate means, differences to baseline, aggregate sectors
 print('calculating means and aggregating sectors')
@@ -263,184 +283,205 @@ for s in range(len(scenarios)):
 print('plotting time series')
 figdir = 'figures/timeseries'
 
-thing = 'real_output_mean'
-plotType = 'dif_rel'
+plotTypes = ['abs','dif_rel']
 
 num_countries = len(country_codes)
 
-# Creating a figure and a grid of subplots
-nrows=6
-ncols=5
-subfig_size = [5, 6]
+for plotType in plotTypes:
+    # Creating a figure and a grid of subplots
+    nrows=6
+    ncols=5
+    subfig_size = [5, 6]
+    if os.path.isfile(figdir+'/timeseries_' + thing + '_as_' + plotType + '.png'):
+        print('skipping grid plots ' + plotType + ' file exists.')
+    else:
+        print('plotting grid plots ' + plotType)
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))
+        fig.suptitle(thing + ' as ' + plotType)
+        fig.subplots_adjust(hspace=0.5, wspace=0.5)
 
-fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))  # Adjust nrows and ncols if needed
-fig.suptitle(thing + ' as ' + plotType)
-fig.subplots_adjust(hspace=0.5, wspace=0.5)
+        max_val = 0
+        min_val = 0
+        for s in range(len(scenarios)):
+            max_val = max(max_val,np.max(scenarios_dif_rel[s][thing]))
+            min_val = min(min_val,np.min(scenarios_dif_rel[s][thing]))
 
-max_val = 0
-min_val = 0
-for s in range(len(scenarios)):
-    max_val = max(max_val,np.max(scenarios_dif_rel[s][thing]))
-    min_val = min(min_val,np.min(scenarios_dif_rel[s][thing]))
+        # Plotting data for each country in its own subplot
+        row = 0
+        col = 0
+        for index, code in enumerate(country_codes):
+            if(col==ncols):
+                row+=1
+                col=0
+            ax = axes[row, col]  # Determine the position of the subplot
+            if(plotType=='abs'):
+                ax.plot(base[thing][:,index], label='Baseline',color='k')
+            for s in range(len(scenarios)):
+                if plotType == 'abs':
+                    ax.plot(scenarios[s][thing][:,index], label=scenarios_names[s],
+                            color=scenarios_colors[s],linestyle=scenarios_linest[s])
+                if plotType == 'dif_rel':
+                    ax.plot(scenarios_dif_rel[s][thing][:,index], label=scenarios_names[s],
+                            color=scenarios_colors[s],linestyle=scenarios_linest[s])
+                    ax.set_ylim(min_val,max_val)
+            ax.set_title(f'{code}')
+            ax.set_xlabel('Time Step')
+            ax.set_ylabel(thing)
+            col+=1
+        handles, labels = ax.get_legend_handles_labels()
+        fig.legend(handles, labels, loc='lower right')
+        # Hide unused subplots
+        for index in range(num_countries, nrows*ncols):  # Adjust the range if the grid size is changed
+            if(col==ncols):
+                row+=1
+                col=0
+            axes[row, col].axis('off')
+            col+=1
 
-# Plotting data for each country in its own subplot
-row = 0
-col = 0
-for index, code in enumerate(country_codes):
-    if(col==ncols):
-        row+=1
-        col=0
-    ax = axes[row, col]  # Determine the position of the subplot
-    if(plotType=='abs'):
-        ax.plot(base[thing][:,index], label='Baseline')
-    for s in range(len(scenarios)):
-        if plotType == 'abs':
-            ax.plot(scenarios[s][thing][:,index], label=scenarios_names[s],
-                    color=scenarios_colors[s],linestyle=scenarios_linest[s])
-        if plotType == 'dif_rel':
-            ax.plot(scenarios_dif_rel[s][thing][:,index], label=scenarios_names[s],
-                    color=scenarios_colors[s],linestyle=scenarios_linest[s])
-            ax.set_ylim(min_val,max_val)
-    ax.set_title(f'{code}')
-    ax.set_xlabel('Time Step')
-    ax.set_ylabel(thing)
-    col+=1
-handles, labels = ax.get_legend_handles_labels()
-fig.legend(handles, labels, loc='lower right')
-# Hide unused subplots
-for index in range(num_countries, nrows*ncols):  # Adjust the range if the grid size is changed
-    if(col==ncols):
-        row+=1
-        col=0
-    axes[row, col].axis('off')
-    col+=1
+        # Adjust layout
+        plt.tight_layout()
 
-# Adjust layout
-plt.tight_layout()
-
-# Show the plot
-if showPlots: plt.show()
+        # Show the plot
+        if showPlots: plt.show()
 
 
-if not os.path.exists(figdir):
-    os.makedirs(figdir)
-fig.savefig(figdir+'/timeseries_' + thing + '_as_' + plotType + '.png')
-fig.savefig(figdir+'/timeseries_' + thing + '_as_' + plotType + '.pdf')
+        if not os.path.exists(figdir):
+            os.makedirs(figdir)
+        fig.savefig(figdir+'/timeseries_' + thing + '_as_' + plotType + '.png')
+        fig.savefig(figdir+'/timeseries_' + thing + '_as_' + plotType + '.pdf')
 
-plt.close()
+        plt.close()
 
 #%% spatial plot
 print('plotting maps')
 basefigdir = 'figures/maps'
 
+subfig_size = (15,15)
 nrows=3
-ncols=10
-subfig_size = [5, 5]
-
+ncols=6
+max_val = 0
+min_val = 0
+for s in range(len(scenarios)):
+    max_val = max(max_val,np.max(scenarios_dif_rel[s][thing]))
+    min_val = min(min_val,np.min(scenarios_dif_rel[s][thing]))
 max_val = max(abs(min_val),abs(max_val))
 min_val = -max_val
 
 scenariosToPlot = [0,1,2,3]
 
+plotType = 'dif_rel'
+
 for scenario_index in scenariosToPlot:
     timestep = 'Q4'
-
-    if plotType == 'abs':
-        thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps) , thing:base[thing].flatten()})
-    if plotType == 'dif_rel':
-        thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps) , thing:scenarios_dif_rel[scenario_index][thing].flatten()})
-
-
-    # initialize the figure
-    nrows=3
-    ncols=6
-    fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))
-    fig.suptitle(thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType)
-    row = 0
-    col = 0
-    for index, timestep in enumerate(time_steps):
-
-        thing_df_1 = thing_df[thing_df['time']==timestep]
-
-        mergedData = europe.merge(thing_df_1, how='left', left_on='ADM0_A3', right_on='country')
-
-        # determine subfigure
-        if(col==ncols):
-            row+=1
-            col=0
-        if row>=nrows or col>=ncols:
-            break
-        if ncols > 1:
-            ax = axes[row, col]
-        else:
-            ax = axes[row]
-        col+=1
-        # define colors
+    if os.path.isfile(basefigdir + '/map-'+ thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.png'):
+        print('skipping spatial plots for scenario ' + scenarios_names[scenario_index] + ' file exists.')
+    else:
+        print('plotting spatial plots for scenario ' + scenarios_names[scenario_index])
         if plotType == 'abs':
-            cmap = cm.Reds
-            min_val, max_val = min(thing_df[thing]), max(thing_df[thing])
+            thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps),
+                                     thing:base[thing].flatten()})
         if plotType == 'dif_rel':
-            cmap = cm.seismic_r
-        norm = mcolors.Normalize(vmin=min_val, vmax=max_val)
+            thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps),
+                                     thing:scenarios_dif_rel[scenario_index][thing].flatten()})
 
-        # create the plot
-        mergedData.plot(column=thing, cmap=cmap, norm=norm,
-                        edgecolor='black', linewidth=0.2,ax=ax)
 
-        # custom axis
-        ax.set_xlim(-15, 35)
-        ax.set_ylim(32, 72)
-        ax.axis('off')
+        # initialize the figure
+        fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))
+        fig.suptitle(thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType)
+        row = 0
+        col = 0
+        for index, timestep in enumerate(time_steps):
 
-        # define range and values for the legend
-        value_ranges = np.arange(min_val,max_val,(max_val-min_val)/10).tolist()
-        labels = ['%.2f' % elem for elem in value_ranges]
+            thing_df_1 = thing_df[thing_df['time']==timestep]
 
-        # parameters of the legend
-        rectangle_width = 2
-        rectangle_height = 1.5
-        legend_x = 30
-        legend_y_start = 55
-        legend_y_step = 1.5
+            mergedData = europe.merge(thing_df_1, how='left', left_on='ADM0_A3', right_on='country')
 
-        # create the legend
-        for i in range(len(labels)):
-           value = (value_ranges[i]-min_val)/(max_val-min_val) # Normalize the value to [0, 1]
-           color = cmap(value)
-           ax.add_patch(plt.Rectangle((legend_x, legend_y_start - i * legend_y_step), rectangle_width, rectangle_height,
-                                      color=color, ec='black', lw=0.6))
-           ax.text(legend_x + 2.5, legend_y_start - i * legend_y_step + 0.7, labels[i],
-                 fontsize=12, va='center')
+            # determine subfigure
+            if(col==ncols):
+                row+=1
+                col=0
+            if row>=nrows or col>=ncols:
+                break
+            if ncols > 1:
+                ax = axes[row, col]
+            else:
+                ax = axes[row]
+            col+=1
 
-        # title
-        ax.title.set_text(timestep)
-    # Hide unused subplots
-    for index in range(len(time_steps), nrows*ncols):  # Adjust the range if the grid size is changed
-        if(col==ncols):
-            row+=1
-            col=0
-        axes[row, col].axis('off')
-        col+=1
+            # for testing
+            # fig, axes =plt.subplots(1,1, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))
+            # ax = axes
 
-    # display the plot
-    plt.tight_layout()
-    if showPlots: plt.show()
+            # define colors
+            if plotType == 'abs':
+                cmap = cmap_abs
+                min_val, max_val = min(thing_df[thing]), max(thing_df[thing])
+            if plotType == 'dif_rel':
+                cmap = cmap_rel
+            norm = mcolors.Normalize(vmin=min_val, vmax=max_val)
 
-    figdir = basefigdir
-    if not os.path.exists(figdir):
-        os.makedirs(figdir)
-    fig.savefig('figures/map-'+ thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.png')
-    fig.savefig('figures/map-'+ thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.pdf')
+            # create the plot
+            mergedData.plot(column=thing, cmap=cmap, norm=norm,
+                            edgecolor='black', linewidth=0.2,ax=ax)
 
-    plt.close(fig)
+            # custom axis
+            ax.set_xlim(-15, 35)
+            ax.set_ylim(32, 72)
+            ax.axis('off')
+
+
+            # color legend
+            ax_lgd = inset_axes(ax,width=subfig_size[0]*0.02,height=subfig_size[1]*0.2,loc='right')
+            norm.lgd = mcolors.Normalize(vmin=min_val*100, vmax=max_val*100)
+            sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm.lgd)
+            plt.colorbar(sm,cax=ax_lgd,location='left',shrink=0.01,
+                         label='change relative to baseline',
+                         format="%+.0f %%")
+
+            # title
+            ax.title.set_text(timestep)
+
+            # for testing
+            # plt.show()
+
+            # save just the subplot
+            figdir = basefigdir + '/' + scenarios_names[scenario_index]
+            if not os.path.exists(figdir):
+                os.makedirs(figdir)
+            fig.savefig(figdir+'/map-'+ sector_thing + '_in_' + scenarios_names[scenario_index] +
+                        '_scenario_as_' + plotType + '_time_step_ ' + timestep + '.png',
+                        dpi=300,
+                        bbox_inches=ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted()).expanded(1.04, 1.06))
+            fig.savefig(figdir+'/map-'+ sector_thing + '_in_' + scenarios_names[scenario_index] +
+                        '_scenario_as_' + plotType + '_time_step_ ' + timestep + '.pdf',
+                        bbox_inches=ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted()).expanded(1.04, 1.06))
+
+        # Hide unused subplots
+        for index in range(len(time_steps), nrows*ncols):  # Adjust the range if the grid size is changed
+            if(col==ncols):
+                row+=1
+                col=0
+            axes[row, col].axis('off')
+            col+=1
+
+        # display the plot
+        plt.tight_layout()
+        if showPlots: plt.show()
+
+        figdir = basefigdir
+        if not os.path.exists(figdir):
+            os.makedirs(figdir)
+        fig.savefig(figdir + '/map-'+ thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.png',
+                                dpi=300)
+        fig.savefig(figdir + '/map-'+ thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.pdf')
+
+        plt.close(fig)
 
 #%% pie chart config
 plotType = 'dif_rel'
-sector_thing = 'real_sector_output_mean_nace1'
 country_index = 22
 scenario_index = 1
-base_radius = 1
-rel_change_scaling = 5
+base_radius = 0.5
 nrows=3
 ncols=6
 subfig_size=[3,3]
@@ -454,458 +495,651 @@ else:
     sector_colors= sectors_nace_62_colors
     sector_names = sectors_nace_62
 
-#%% function pie charts real output per sector
-
-def addRelChangePiePlot(piedata,ax):
-    #circle scale lines
-    ax.add_patch(plt.Circle((0,0), base_radius*(1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
-    ax.add_patch(plt.Circle((0,0), base_radius*(1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-    # ax.add_patch(plt.Circle((0,0), base_radius*(1-0.01*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-    ax.add_patch(plt.Circle((0,0), base_radius, linestyle='-', fill = False, edgecolor='k' ))
-    # ax.add_patch(plt.Circle((0,0), base_radius*(1+0.01*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-    ax.add_patch(plt.Circle((0,0), base_radius*(1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-    # ax.add_patch(plt.Circle((0,0), base_radius*(1+0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
-
-    # the pie wedges
-    for s in range(len(piedata)):
-        wedges1, texts1 = ax.pie(piedata, radius=base_radius + rel_change_scaling* scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s],
-                                 colors=sector_colors, wedgeprops=wedgeprops, counterclock=False, startangle=-270)
-        for wi in range(len(wedges1)):
-            if wi != s:
-                wedges1[wi].set_visible(False)
-
-#%% pie charts
-print('plotting pies')
-
-basefigdir = 'figures/pies'
-
-# initialize the figure
-for country_index in range(len(country_codes)):
-    for scenario_index in [0,1,2,3]:
-        print(sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for country ' + country_codes_3[country_index])
-        fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))
-        fig.suptitle(sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for country ' + country_codes_3[country_index])
-        row = 0
-        col = 0
-        for time_index, timestep in enumerate(time_steps):
-            # determine subfigure
-            if(col==ncols):
-                row+=1
-                col=0
-            if row>=nrows or col>=ncols:
-                break
-            if ncols > 1:
-                ax = axes[row, col]
-            else:
-                ax = axes[row]
-            col+=1
-            piedata = base[sector_thing][time_index,country_index,:]
-            addRelChangePiePlot(piedata,ax)
-            # title
-            ax.title.set_text(timestep)
-        # Hide unused subplots
-        for time_index in range(len(time_steps), nrows*ncols-2):  # Adjust the range if the grid size is changed
-            if(col==ncols):
-                row+=1
-                col=0
-            axes[row, col].axis('off')
-            col+=1
-
-        # scale lines legend
-        ax = axes[nrows-1,ncols-2]
-        limits = 1+(0.09*rel_change_scaling)
-        ax.set_xlim(-limits, limits)
-        ax.set_ylim(-limits, limits)
-        ax.axis('off')
-        ax.add_patch(plt.Circle((0,0), (1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
-        ax.add_patch(plt.Circle((0,0), (1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-        ax.add_patch(plt.Circle((0,0), 1, linestyle='-', fill = False, edgecolor='k' ))
-        ax.add_patch(plt.Circle((0,0), (1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-        ax.text(0,(1-0.1*rel_change_scaling),'-10%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        ax.text(0,(1-0.05*rel_change_scaling),'-5%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        ax.text(0,1,'reference',fontsize=10,
-                  backgroundcolor='white',color='black',horizontalalignment='center',verticalalignment='center')
-        ax.text(0,(1+0.05*rel_change_scaling),'+5%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        # ax.text(0,(1+0.1*rel_change_scaling),'+10%',fontsize=10,
-        #           backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-
-        # sector color legends
-        ax =  axes[nrows-1,ncols-1]
-        wedges, texts = ax.pie(np.ones(len(piedata)),radius=base_radius, colors=sector_colors, labels=sector_names,
-                                 wedgeprops=wedgeprops, counterclock=False, startangle=-270)
-        ax.title.set_text('Sectors')
-
-        # display the plot
-        plt.tight_layout()
-        if showPlots: plt.show()
-
-        # save the plot
-        figdir = basefigdir + '/' + scenarios_names[scenario_index]
-        if not os.path.exists(figdir):
-            os.makedirs(figdir)
-        fig.savefig(figdir+'/pie-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + ' for country ' + country_codes_3[country_index] + '.png')
-        fig.savefig(figdir+'/pie-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + ' for country ' + country_codes_3[country_index] + '.pdf')
-
-        plt.close(fig)
-
-
-#%% function pie charts real output per sector only rel diff
-
-def addBrokenDonutPlot(piedata,ax):
-    #circle scale lines
-    ax.add_patch(plt.Circle((0,0), base_radius*(1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
-    ax.add_patch(plt.Circle((0,0), base_radius*(1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-    ax.add_patch(plt.Circle((0,0), base_radius, linestyle='-', fill = False, linewidth=0.1 ))
-    ax.add_patch(plt.Circle((0,0), base_radius*(1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-    for s in range(len(piedata)):
-        if scenarios_dif_rel[1][sector_thing][time_index,country_index,s] >= 0:
-            wedges1, texts1 = ax.pie(piedata, radius=base_radius * (1 + rel_change_scaling * scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s]),
-                                     colors=sector_colors, wedgeprops=wedgeprops, counterclock=False, startangle=-270)
-            wedges1[s].set_width(base_radius*(1-1/1 + rel_change_scaling * scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s]))
-        else:
-            wedges1, texts1 = ax.pie(piedata, radius=base_radius,
-                                     colors=sector_colors, wedgeprops=wedgeprops, counterclock=False, startangle=-270)
-            wedges1[s].set_width(- base_radius * rel_change_scaling * scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s])
-        for wi in range(len(wedges1)):
-            if wi != s:
-                wedges1[wi].set_visible(False)
-
-#%% broken donut charts real output per sector only rel diff
-print('plotting broken donuts')
-
-basefigdir = 'figures/brokendonuts'
-
 max_val = 0
 min_val = 0
 for s in range(len(scenarios)):
     max_val = max(max_val,np.max(scenarios_dif_rel[s][thing]))
     min_val = min(min_val,np.min(scenarios_dif_rel[s][thing]))
+max_val = max(abs(min_val),abs(max_val))
+min_val = -max_val
 
-# initialize the figure
-for country_index in range(len(country_codes)):
-    for scenario_index in [0,1,2,3]:
-        print(sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for country ' + country_codes_3[country_index])
+max_sectorThing_val = 0
+min_sectorThing_val = 0
+for s in range(len(scenarios)):
+    max_sectorThing_val = max(max_sectorThing_val,np.max(scenarios_dif_rel[s][sector_thing]))
+    min_sectorThing_val = min(min_sectorThing_val,np.min(scenarios_dif_rel[s][sector_thing]))
 
-        # initialize the figure
-        nrows=3
-        ncols=6
-        fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows))
-        fig.suptitle(sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for country ' + country_codes_3[country_index])
-        row = 0
-        col = 0
-        for time_index, timestep in enumerate(time_steps):
-            # determine subfigure
-            if(col==ncols):
-                row+=1
-                col=0
-            if row>=nrows or col>=ncols:
-                break
-            if ncols > 1:
-                ax = axes[row, col]
+rel_change_scaling = 5
+
+
+
+#%% function pie charts real output per sector
+
+def addRelChangePiePlot(piedata,ax):
+    #circle scale lines
+    ax.add_patch(plt.Circle((0,0), base_radius*(1-0.1*rel_change_scaling), linestyle='--',
+                            fill = False, edgecolor='gray', linewidth=1))
+    ax.add_patch(plt.Circle((0,0), base_radius*(1-0.05*rel_change_scaling), linestyle=':',
+                            fill = False, edgecolor='gray', linewidth=1))
+    ax.add_patch(plt.Circle((0,0), base_radius, linestyle='-', fill = False, edgecolor='k' ))
+    ax.add_patch(plt.Circle((0,0), base_radius*(1+0.05*rel_change_scaling), linestyle=':',
+                            fill = False, edgecolor='gray', linewidth=1))
+
+    # the pie wedges
+    for s in range(len(piedata)):
+        wedges1, texts1 = ax.pie(piedata, radius=max(0.000001,base_radius +
+                                 rel_change_scaling* scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s]),
+                                 colors=sector_colors, wedgeprops=wedgeprops, counterclock=False, startangle=-270)
+        for wi in range(len(wedges1)):
+            if wi != s:
+                wedges1[wi].set_visible(False)
+#%% function pie charts real output per sector only rel diff
+
+def addBrokenDonutPlot(piedata,ax,halo=False):
+    #circle scale lines
+    sclLin_sty = ['--',':','-',':']
+    sclLin_wth = [1,1,0.1,1]
+    sclLin_rad = [-0.1,-0.05,0,0.05]
+    sclLin_col = ['k','k','k','k']
+    shdCirc_rad = 0
+    shdCirc_lwd = [3,6,8,10,12,14,16,20,22,24,26,28,30]
+    for i in range(len(sclLin_rad)):
+        circle = plt.Circle((0,0), base_radius*(1+sclLin_rad[i]*rel_change_scaling), linestyle=sclLin_sty[i],
+                            fill = False, edgecolor=sclLin_col[i], linewidth=sclLin_wth[i])
+        ax.add_patch(circle)
+        if sclLin_rad[i]==shdCirc_rad and halo:
+            for j in range(len(shdCirc_lwd)):
+                shadowArgs = dict(alpha=0.05,antialiased = True, color='white',linewidth=shdCirc_lwd[j],linestyle='-')
+                ax.add_patch(patches.Shadow(circle,0,0,shade=1,**shadowArgs))
+
+    for s in range(len(piedata)):
+        if scenarios_dif_rel[1][sector_thing][time_index,country_index,s] >= 0:
+            wedges1, texts1 = ax.pie(piedata, radius=base_radius * (1 + rel_change_scaling * scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s]),
+                                     colors=sector_colors, wedgeprops=wedgeprops, counterclock=False, startangle=-270,
+                                     shadow=False)
+            wedges1[s].set_width(base_radius*(1-1/1 + rel_change_scaling * scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s]))
+        else:
+            wedges1, texts1 = ax.pie(piedata, radius=base_radius,
+                                     colors=sector_colors, wedgeprops=wedgeprops, counterclock=False, startangle=-270,
+                                     shadow=False)
+            wedges1[s].set_width(- base_radius * rel_change_scaling * scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,s])
+        for wi in range(len(wedges1)):
+            if wi != s:
+                wedges1[wi].set_visible(False)
+
+#%% pie / broken donutcharts by country
+nrows=3
+ncols=6
+
+for bakedGoodType in ['pies','brokendonouts']:
+    print('plotting '+bakedGoodType+' by country')
+    basefigdir = 'figures/'+bakedGoodType
+    for country_index in range(len(country_codes)):
+        for scenario_index in [0,1,2,3]:
+            figdir = basefigdir + '/' + scenarios_names[scenario_index]
+            if os.path.isfile(figdir+'/' + bakedGoodType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType +
+                        ' for country ' + country_codes_3[country_index] + '.png'):
+                print('skipping ' + sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for country ' +
+                  country_codes_3[country_index] + ' file exists.')
             else:
-                ax = axes[row]
-            col+=1
-            piedata = base[sector_thing][time_index,country_index,:]
-            addBrokenDonutPlot(piedata,ax)
-            # title
-            ax.title.set_text(timestep)
-        # Hide unused subplots
-        for time_index in range(len(time_steps), nrows*ncols-2):  # Adjust the range if the grid size is changed
-            if(col==ncols):
-                row+=1
-                col=0
-            axes[row, col].axis('off')
-            col+=1
+                print('plotting ' + sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for country ' +
+                  country_codes_3[country_index])
+                fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))
+                fig.suptitle(sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for country ' +
+                             country_codes_3[country_index])
+                row = 0
+                col = 0
+                for time_index, timestep in enumerate(time_steps):
+                    # determine subfigure
+                    if(col==ncols):
+                        row+=1
+                        col=0
+                    if row>=nrows or col>=ncols:
+                        break
+                    if ncols > 1:
+                        ax = axes[row, col]
+                    else:
+                        ax = axes[row]
+                    col+=1
+                    piedata = base[sector_thing][time_index,country_index,:]
+                    if bakedGoodType=='pies':
+                        addRelChangePiePlot(piedata,ax)
+                    else:
+                        addBrokenDonutPlot(piedata,ax)
+                    # title
+                    ax.title.set_text(timestep)
+                # Hide unused subplots
+                for time_index in range(len(time_steps), nrows*ncols-2):  # Adjust the range if the grid size is changed
+                    if(col==ncols):
+                        row+=1
+                        col=0
+                    axes[row, col].axis('off')
+                    col+=1
 
-        # scale lines legend
-        ax = axes[nrows-1,ncols-2]
-        limits = 1+(0.09*rel_change_scaling)
-        ax.set_xlim(-limits, limits)
-        ax.set_ylim(-limits, limits)
-        ax.axis('off')
-        ax.add_patch(plt.Circle((0,0), (1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
-        ax.add_patch(plt.Circle((0,0), (1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-        ax.add_patch(plt.Circle((0,0), 1, linestyle='-', fill = False, edgecolor='k' ))
-        ax.add_patch(plt.Circle((0,0), (1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-        ax.text(0,(1-0.1*rel_change_scaling),'-10%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        ax.text(0,(1-0.05*rel_change_scaling),'-5%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        ax.text(0,1,'reference',fontsize=10,
-                  backgroundcolor='white',color='black',horizontalalignment='center',verticalalignment='center')
-        ax.text(0,(1+0.05*rel_change_scaling),'+5%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+                # scale lines legend
+                ax = axes[nrows-1,ncols-2]
+                limits = 1+(0.09*rel_change_scaling)
+                ax.set_xlim(-limits, limits)
+                ax.set_ylim(-limits, limits)
+                ax.axis('off')
+                ax.add_patch(plt.Circle((0,0), (1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
+                ax.add_patch(plt.Circle((0,0), (1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
+                ax.add_patch(plt.Circle((0,0), 1, linestyle='-', fill = False, edgecolor='k' ))
+                ax.add_patch(plt.Circle((0,0), (1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
+                ax.text(0,(1-0.1*rel_change_scaling),'-10%',fontsize=10,
+                          backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+                ax.text(0,(1-0.05*rel_change_scaling),'-5%',fontsize=10,
+                          backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+                ax.text(0,1,'reference',fontsize=10,
+                          backgroundcolor='white',color='black',horizontalalignment='center',verticalalignment='center')
+                ax.text(0,(1+0.05*rel_change_scaling),'+5%',fontsize=10,
+                          backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+                # ax.text(0,(1+0.1*rel_change_scaling),'+10%',fontsize=10,
+                #           backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
 
-        # sector color legends
-        ax =  axes[nrows-1,ncols-1]
-        wedges, texts = ax.pie(np.ones(len(piedata)), colors=sector_colors, labels=sector_names,
-                                 wedgeprops=wedgeprops, counterclock=False, startangle=-270)
-        ax.title.set_text('Sectors')
+                # sector color legends
+                ax =  axes[nrows-1,ncols-1]
+                wedges, texts = ax.pie(np.ones(len(piedata)),radius=base_radius, colors=sector_colors, labels=sector_names,
+                                         wedgeprops=wedgeprops, counterclock=False, startangle=-270)
+                ax.title.set_text('Sectors')
 
-        # display the plot
-        plt.tight_layout()
-        if showPlots: plt.show()
+                # display the plot
+                plt.tight_layout()
+                if showPlots: plt.show()
 
-        # save the plot
-        figdir = basefigdir + '/' + scenarios_names[scenario_index]
-        if not os.path.exists(figdir):
-            os.makedirs(figdir)
-        fig.savefig(figdir+'/brokendonut-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '_country_ ' + country_codes_3[country_index] + '.png')
-        fig.savefig(figdir+'/brokendonut-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '_country_' + country_codes_3[country_index] + '.pdf')
+                # save the plot
+                if not os.path.exists(figdir):
+                    os.makedirs(figdir)
+                fig.savefig(figdir+'/' + bakedGoodType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType +
+                            ' for country ' + country_codes_3[country_index] + '.png',
+                                        dpi=300)
+                fig.savefig(figdir+'/' + bakedGoodType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType +
+                            ' for country ' + country_codes_3[country_index] + '.pdf')
 
-        plt.close(fig)
+                plt.close(fig)
+
+#%% pie charts time slices
+print('plotting pies by time')
+
+nrows=5
+ncols=6
+
+for bakedGoodType in ['pies','brokendonouts']:
+    print('plotting '+bakedGoodType+' by time')
+    basefigdir = 'figures/'+bakedGoodType
+    for time_index, timestep in enumerate(time_steps):
+        for scenario_index in [0,1,2,3]:
+            figir =basefigdir + '/' + scenarios_names[scenario_index]
+            if os.path.isfile(figdir+'/' + bakedGoodType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType +
+                            ' for time ' +timestep + '.png'):
+                print('skipping ' + sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType +
+                  ' for time ' + timestep + ' file exists.')
+            else:
+                print('plotting ' + sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType +
+                      ' for time ' + timestep)
+                fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows ))
+                fig.suptitle(sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType +
+                      ' for time ' + timestep)
+                row = 0
+                col = 0
+                for country_index in range(len(country_codes)):
+                    # determine subfigure
+                    if(col==ncols):
+                        row+=1
+                        col=0
+                    if row>=nrows or col>=ncols:
+                        break
+                    if ncols > 1:
+                        ax = axes[row, col]
+                    else:
+                        ax = axes[row]
+                    col+=1
+                    piedata = base[sector_thing][time_index,country_index,:]
+                    if bakedGoodType=='pies':
+                        addRelChangePiePlot(piedata,ax)
+                    else:
+                        addBrokenDonutPlot(piedata,ax)
+                    # title
+                    ax.title.set_text(country_codes[country_index])
+                # Hide unused subplots
+                for country_index in range(len(country_codes), nrows*ncols-2):
+                    if(col==ncols):
+                        row+=1
+                        col=0
+                    axes[row, col].axis('off')
+                    col+=1
+
+                # scale lines legend
+                ax = axes[nrows-1,ncols-2]
+                limits = 1+(0.09*rel_change_scaling)
+                ax.set_xlim(-limits, limits)
+                ax.set_ylim(-limits, limits)
+                ax.axis('off')
+                ax.add_patch(plt.Circle((0,0), (1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
+                ax.add_patch(plt.Circle((0,0), (1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
+                ax.add_patch(plt.Circle((0,0), 1, linestyle='-', fill = False, edgecolor='k' ))
+                ax.add_patch(plt.Circle((0,0), (1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
+                ax.text(0,(1-0.1*rel_change_scaling),'-10%',fontsize=10,
+                          backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+                ax.text(0,(1-0.05*rel_change_scaling),'-5%',fontsize=10,
+                          backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+                ax.text(0,1,'reference',fontsize=10,
+                          backgroundcolor='white',color='black',horizontalalignment='center',verticalalignment='center')
+                ax.text(0,(1+0.05*rel_change_scaling),'+5%',fontsize=10,
+                          backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+                # ax.text(0,(1+0.1*rel_change_scaling),'+10%',fontsize=10,
+                #           backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
+
+                # sector color legends
+                ax =  axes[nrows-1,ncols-1]
+                wedges, texts = ax.pie(np.ones(len(piedata)),radius=base_radius, colors=sector_colors, labels=sector_names,
+                                         wedgeprops=wedgeprops, counterclock=False, startangle=-270)
+                ax.title.set_text('Sectors')
+
+                # display the plot
+                plt.tight_layout()
+                if showPlots: plt.show()
+
+                # save the plot
+                if not os.path.exists(figdir):
+                    os.makedirs(figdir)
+                fig.savefig(figdir+'/' + bakedGoodType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType +
+                            ' for time ' +timestep + '.png',
+                                        dpi=300)
+                fig.savefig(figdir+'/' + bakedGoodType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType +
+                            ' for time ' + timestep + '.pdf')
+
+                plt.close(fig)
 
 
+
+#%% function stacked relative changes plot
+def addRelChangeStackedBarPlot(piedata,difData,ax,width=0.7):
+    ax.axis('off')
+    ax.set_ylim(-0.2, 0.2)
+    ax.set_xlim(-1, 1)
+    indices = np.argsort(piedata)[::-1]
+    indicesUp = [int(i) for i in indices if difData[i]>0]
+    indicesDn = [int(i) for i in indices if difData[i]<0]
+    widthmult = 0.95*width/(2*max(piedata))
+    highlightLineWidth = 5
+
+    upsum=0
+    downsum=0
+    plt.plot([-width/2,width/2],[0,0],'w-',lw=highlightLineWidth,zorder=-6)
+    sclLins = np.arange(0.05,sum(difData[indicesUp])+0.025,step=0.05).tolist()
+    sclLins_max = max(sclLins+[0])
+    sclLins_ls = ['-','-']
+    sclLins_ls = sclLins_ls * int(round(len(sclLins)/(len(sclLins_ls)*0.9)))
+    sclLins_wdt = width/3
+    for s in indicesUp:
+        ax.bar(0,
+               difData[s],
+               piedata[s]*widthmult,
+               label='',
+               bottom=upsum,
+               color=sector_colors[s],
+               edgecolor='white',
+               linewidth=highlightLineWidth,zorder=-5)
+        upsum += difData[s]
+        if len(sclLins)>0 and upsum > sclLins[0]:
+            sclLins_wdt = 0.16+piedata[s]*widthmult
+            plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='white',ls=sclLins_ls.pop(),lw=highlightLineWidth,zorder=-5,)
+            sclLins.pop(0)
+    if len(sclLins)>0:
+        plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='white',ls=sclLins_ls.pop(),lw=highlightLineWidth,zorder=-5)
+
+    sclLins = np.arange(-0.05,sum(difData[indicesDn])+0.025-0.025,step=-0.05).tolist()
+    sclLins_min = min(sclLins+[0])
+    sclLins_ls = ['-','-']
+    sclLins_ls = sclLins_ls * int(round(len(sclLins)/(len(sclLins_ls)*0.9)))
+    sclLins_wdt = width
+    for s in indicesDn:
+        ax.bar(0,
+               difData[s],
+               piedata[s]*widthmult,
+               label='',
+               bottom=downsum,
+               linewidth=highlightLineWidth,zorder=-5)
+        downsum += difData[s]
+        if len(sclLins)>0 and downsum < sclLins[0]:
+            sclLins_wdt = 0.16+piedata[s]*widthmult
+            plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='white',ls=sclLins_ls.pop(),lw=highlightLineWidth,zorder=-5)
+            sclLins.pop(0)
+    if len(sclLins)>0:
+        plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='white',ls='--',lw=highlightLineWidth,zorder=-5)
+
+    plt.plot([0,0],[sclLins_min,sclLins_max],color='white',zorder=-6,lw=highlightLineWidth)
+
+    upsum=0
+    downsum=0
+    plt.plot([-width/2,width/2],[0,0],'k-',lw=1,zorder=-4)
+    sclLins = np.arange(0.05,sum(difData[indicesUp])+0.025,step=0.05).tolist()
+    sclLins_ls = ['--',':']
+    sclLins_ls = sclLins_ls * int(round(len(sclLins)/(len(sclLins_ls)*0.9)))
+    sclLins_wdt = width/3
+    for s in indicesUp:
+        ax.bar(0,
+               difData[s],
+               piedata[s]*widthmult,
+               label='',
+               bottom=upsum,
+               color=sector_colors[s],
+               edgecolor='white',
+               linewidth=0)
+        upsum += difData[s]
+        if len(sclLins)>0 and upsum > sclLins[0]:
+            sclLins_wdt = 0.15+piedata[s]*widthmult
+            plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='gray',ls=sclLins_ls.pop(),lw=1,zorder=-4,)
+            sclLins.pop(0)
+    if len(sclLins)>0:
+        plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='gray',ls=sclLins_ls.pop(),lw=1,zorder=-4)
+
+    sclLins = np.arange(-0.05,sum(difData[indicesDn])+0.025-0.025,step=-0.05).tolist()
+    sclLins_ls = ['--',':']
+    sclLins_ls = sclLins_ls * int(round(len(sclLins)/(len(sclLins_ls)*0.9)))
+    sclLins_wdt = width
+    for s in indicesDn:
+        ax.bar(0,
+               difData[s],
+               piedata[s]*widthmult,
+               label='',
+               bottom=downsum,
+               linewidth=0)
+        downsum += difData[s]
+        if len(sclLins)>0 and downsum < sclLins[0]:
+            sclLins_wdt = 0.15+piedata[s]*widthmult
+            plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='gray',ls=sclLins_ls.pop(),lw=1,zorder=-4)
+            sclLins.pop(0)
+    if len(sclLins)>0:
+        plt.plot([-sclLins_wdt/2,sclLins_wdt/2],[sclLins[0],sclLins[0]],color='gray',ls='--',lw=1,zorder=-4)
+
+
+
+# fig, ax = plt.subplots()
+# ax.set_xlim(-1, 1)
+# ax.set_ylim(-0.2, 0.2)
+# ax.axis('off')
+# # difData = scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,:]
+# addRelChangeStackedBarPlot(piedata,difData,ax)
+# plt.show()
+# ax.bar(0.5,1,1,0)
+# ax.bar(0.5, 1, 1, label='', bottom=0)
+
+
+
+#%% spatial pie config
+
+subfig_size = (15,15)
+insetfig_size = min(subfig_size)*0.15
+base_radius = 0.5
 
 #%% spatial pie plot
 print('plotting maps with broken donuts')
-basefigdir='figures/maps-brokendonut'
-subfig_size = (15,15)
-insetfig_size = min(subfig_size)*0.06
-base_radius = 1
 
-thing = 'real_output_mean'
-sector_thing = 'real_sector_output_mean_nace1'
 sns.set(style="whitegrid", palette="pastel", color_codes=True)
 
 max_val = max(abs(min_val),abs(max_val))
 min_val = -max_val
 
-scenariosToPlot = [1]
+scenariosToPlot = [0,1,2,3]
 
-for scenario_index in scenariosToPlot:
-    print('running scenario '+scenarios_names[scenario_index])
-    if plotType == 'abs':
-        thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps) , thing:base[thing].flatten()})
-    if plotType == 'dif_rel':
-        thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps) , thing:scenarios_dif_rel[scenario_index][thing].flatten()})
-
-
-    # initialize the figure
-    nrows=3
-    ncols=6
-    fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows))
-    fig.suptitle(thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType)
-    row = 0
-    col = 0
-    for time_index, timestep in enumerate(time_steps):
-        print(' time step ' + timestep)
-        # determine subfigure
-        if(col==ncols):
-            row+=1
-            col=0
-        if row>=nrows or col>=ncols:
-            break
-        if ncols > 1:
-            ax = axes[row, col]
-        else:
-            ax = axes[row]
-        col+=1
-        # define colors
-        if plotType == 'abs':
-            cmap = cm.Reds
-            min_val, max_val = min(thing_df[thing]), max(thing_df[thing])
-        if plotType == 'dif_rel':
-            cmap = cm.seismic_r
-        norm = mcolors.Normalize(vmin=min_val, vmax=max_val)
-
-        # create the plot
-        thing_df_1 = thing_df[thing_df['time']==timestep]
-        mergedData = europe.merge(thing_df_1, how='left', left_on='ADM0_A3', right_on='country')
-        mergedData.plot(column=thing, cmap=cmap, norm=norm,
-                        edgecolor='black', linewidth=0.2,ax=ax)
-
-        # custom axis
-        ax.set_xlim(-15, 35)
-        ax.set_ylim(32, 72)
-        ax.axis('off')
-
-        # arrow for BEL inset
-        ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='BEL'].iloc[0],
-                                                  europe['LABEL_Y'][europe['ADM0_A3']=='BEL'].iloc[0]),
-                                                  (europe['INSET_FIG_X'][europe['ADM0_A3']=='BEL'].iloc[0],
-                                                  europe['INSET_FIG_Y'][europe['ADM0_A3']=='BEL'].iloc[0]-1.9),
-                                                  color='k', linewidth=0.2,connectionstyle="arc3,rad=-.3"))
-
-        # arrow for LUX inset
-        ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='LUX'].iloc[0],
-                                                  europe['LABEL_Y'][europe['ADM0_A3']=='LUX'].iloc[0]),
-                                                  (europe['INSET_FIG_X'][europe['ADM0_A3']=='LUX'].iloc[0]+1.3,
-                                                  europe['INSET_FIG_Y'][europe['ADM0_A3']=='LUX'].iloc[0]-1.3),
-                                                  color='k', linewidth=0.2,connectionstyle="arc3,rad=-.3"))
-
-        # arrow for SVN inset
-        ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='SVN'].iloc[0],
-                                                  europe['LABEL_Y'][europe['ADM0_A3']=='SVN'].iloc[0]),
-                                                  (europe['INSET_FIG_X'][europe['ADM0_A3']=='SVN'].iloc[0]+1.9,
-                                                  europe['INSET_FIG_Y'][europe['ADM0_A3']=='SVN'].iloc[0]),
-                                                  color='k', linewidth=0.2,connectionstyle="arc3,rad=-.6"))
-
-        # arrow for SVK inset
-        ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='SVK'].iloc[0]+2,
-                                                  europe['LABEL_Y'][europe['ADM0_A3']=='SVK'].iloc[0]),
-                                                  (europe['INSET_FIG_X'][europe['ADM0_A3']=='SVK'].iloc[0]-1.3,
-                                                  europe['INSET_FIG_Y'][europe['ADM0_A3']=='SVK'].iloc[0]-1.3),
-                                                  color='k', linewidth=0.2,connectionstyle="arc3,rad=.1"))
-        # country inset plots
-        for country_index in range(len(country_codes)):
-            print('Making inset ' + country_codes_3[country_index])
-            ax_sub = inset_axes(ax, width=insetfig_size, height=insetfig_size, loc=10,
-                                bbox_to_anchor=(europe[europe['ADM0_A3']==country_codes_3[country_index]]['INSET_FIG_X'],
-                                                europe[europe['ADM0_A3']==country_codes_3[country_index]]['INSET_FIG_Y']),
-                                bbox_transform=ax.transData)
-            piedata = base[sector_thing][time_index,country_index,:]
-            addBrokenDonutPlot(piedata,ax_sub)
-
-        # define range and values for the legend
-        value_ranges = np.arange(min_val,max_val,(max_val-min_val)/10).tolist()
-        labels = ['%.2f' % elem for elem in value_ranges]
-
-        # parameters of the legend
-        rectangle_width = 2
-        rectangle_height = 1.5
-        legend_x = 30
-        legend_y_start = 55
-        legend_y_step = 1.5
-
-        # create the legend
-        for i in range(len(labels)):
-           value = (value_ranges[i]-min_val)/(max_val-min_val) # Normalize the value to [0, 1]
-           color = cmap(value)
-           ax.add_patch(plt.Rectangle((legend_x, legend_y_start - i * legend_y_step), rectangle_width, rectangle_height,
-                                      color=color, ec='black', lw=0.6))
-           ax.text(legend_x + 2.5, legend_y_start - i * legend_y_step + 0.7, labels[i],
-                 fontsize=12, va='center')
-
-        # title
-        ax.title.set_text(timestep)
-
-        # scale lines legend
-        ax_sub = inset_axes(ax, width=insetfig_size*1.5, height=insetfig_size*1.5, loc=10,
-                            bbox_to_anchor=(ax.get_xlim()[0]+3,ax.get_ylim()[1]-5),
-                            bbox_transform=ax.transData)
-        limits = 1+(0.09*rel_change_scaling)
-        ax_sub.set_xlim(-limits, limits)
-        ax_sub.set_ylim(-limits, limits)
-        ax_sub.axis('off')
-        ax_sub.add_patch(plt.Circle((0,0), (1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
-        ax_sub.add_patch(plt.Circle((0,0), (1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-        ax_sub.add_patch(plt.Circle((0,0), 1, linestyle='-', fill = False, edgecolor='k' ))
-        ax_sub.add_patch(plt.Circle((0,0), (1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-        ax_sub.title.set_text('Relative Change')
-        textkw = dict(facecolor='white',linewidth=0,pad=1)
-        txt=ax_sub.text(0,(1-0.11*rel_change_scaling),'-10%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        txt.set_bbox(textkw)
-        txt=ax_sub.text(0,(1-0.05*rel_change_scaling),'-5%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        txt.set_bbox(textkw)
-        # ax_sub.text(0,1,'reference',fontsize=10,
-        #           backgroundcolor='white',color='black',horizontalalignment='center',verticalalignment='center')
-        txt=ax_sub.text(0,(1+0.05*rel_change_scaling),'+5%',fontsize=10,
-                  backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-        txt.set_bbox(textkw)
-
-        # sector color legends
-        ax_sub = inset_axes(ax, width=insetfig_size*1.5, height=insetfig_size*1.5, loc=10,
-                            bbox_to_anchor=(ax.get_xlim()[0]+10,ax.get_ylim()[1]-5),
-                            bbox_transform=ax.transData)
-        wedges, texts = ax_sub.pie(np.ones(len(piedata)), colors=sector_colors, labels=sector_names,
-                                 wedgeprops=wedgeprops, counterclock=False, startangle=-270)
-        ax_sub.title.set_text('Sectors')
-
-        # save just the subplot
+for insetType in ['bars','brokendonut']:
+    basefigdir='figures/maps-' + insetType
+    for scenario_index in scenariosToPlot:
         figdir = basefigdir + '/' + scenarios_names[scenario_index]
-        if not os.path.exists(figdir):
-            os.makedirs(figdir)
-        fig.savefig(figdir+'/map-brokendonut-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '_time_step_ ' + timestep + '.png',
-                    bbox_inches=ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted()).expanded(1, 1))
-        fig.savefig(figdir+'/map-brokendonut-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '_time_step_ ' + timestep + '.pdf',
-                    bbox_inches=ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted()).expanded(1, 1))
+        if os.path.isfile(figdir+'/brokendonut-'+ sector_thing + '_in_' +
+                          scenarios_names[scenario_index] + '_scenario_as_' +
+                        plotType + '_time_ ' + timestep + '.png'):
+            print('skipping ' + sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for time ' +
+              timestep + ' file exists.')
+        else:
+            print('plotting ' + sector_thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType + ' for time ' +
+                  timestep)
+            print('running scenario '+scenarios_names[scenario_index])
+            if plotType == 'abs':
+                thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps),
+                                         thing:base[thing].flatten()})
+            if plotType == 'dif_rel':
+                thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps),
+                                         thing:scenarios_dif_rel[scenario_index][thing].flatten()})
 
-    # Hide unused subplots
-    for time_index in range(len(time_steps), nrows*ncols):  # Adjust the range if the grid size is changed
-        if(col==ncols):
-            row+=1
-            col=0
-        axes[row, col].axis('off')
-        col+=1
 
-    # display the plot
-    plt.tight_layout()
-    if showPlots: plt.show()
+            # initialize the figure
+            nrows=3
+            ncols=6
+            fig, axes = plt.subplots(nrows, ncols, figsize=(subfig_size[0]*ncols,subfig_size[1]*nrows))
+            plt.tight_layout()
+            fig.suptitle(thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType)
+            row = 0
+            col = 0
+            for time_index, timestep in enumerate(time_steps):
+                print(' time step ' + timestep)
+                # determine subfigure
+                if(col==ncols):
+                    row+=1
+                    col=0
+                if row>=nrows or col>=ncols:
+                    break
+                if ncols > 1:
+                    ax = axes[row, col]
+                else:
+                    ax = axes[row]
+                col+=1
+                # define colors
+                if plotType == 'abs':
+                    cmap = cm.Reds
+                    min_val, max_val = min(thing_df[thing]), max(thing_df[thing])
+                if plotType == 'dif_rel':
+                    cmap = cm.twilight_shifted_r#cm.seismic_r
+                norm = mcolors.Normalize(vmin=min_val, vmax=max_val)
 
-    # save just the whole figure
-    figdir = basefigdir
-    if not os.path.exists(figdir):
-        os.makedirs(figdir)
-    fig.savefig(figdir+'/map-brokendonut-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.png')
-    fig.savefig(figdir+'/map-brokendonut-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.pdf')
+                # create the plot
+                thing_df_1 = thing_df[thing_df['time']==timestep]
+                mergedData = europe.merge(thing_df_1, how='left', left_on='ADM0_A3', right_on='country')
+                mergedData.plot(column=thing, cmap=cmap, norm=norm,
+                                edgecolor='black', linewidth=0.2,ax=ax)
 
-    plt.close(fig)
+                # custom axis
+                ax.set_xlim(-10, 35)
+                ax.set_ylim(32, 67)
+                ax.axis('off')
+
+                # arrow for BEL inset
+                ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='BEL'].iloc[0],
+                                                          europe['LABEL_Y'][europe['ADM0_A3']=='BEL'].iloc[0]),
+                                                          (europe['INSET_FIG_X'][europe['ADM0_A3']=='BEL'].iloc[0],
+                                                          europe['INSET_FIG_Y'][europe['ADM0_A3']=='BEL'].iloc[0]-1.9),
+                                                          color='k', linewidth=0.2,connectionstyle="arc3,rad=-.3"))
+
+                # arrow for LUX inset
+                ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='LUX'].iloc[0],
+                                                          europe['LABEL_Y'][europe['ADM0_A3']=='LUX'].iloc[0]),
+                                                          (europe['INSET_FIG_X'][europe['ADM0_A3']=='LUX'].iloc[0]+1.3,
+                                                          europe['INSET_FIG_Y'][europe['ADM0_A3']=='LUX'].iloc[0]-1.3),
+                                                          color='k', linewidth=0.2,connectionstyle="arc3,rad=-.3"))
+
+                # arrow for SVN inset
+                ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='SVN'].iloc[0],
+                                                          europe['LABEL_Y'][europe['ADM0_A3']=='SVN'].iloc[0]),
+                                                          (europe['INSET_FIG_X'][europe['ADM0_A3']=='SVN'].iloc[0]+1.9,
+                                                          europe['INSET_FIG_Y'][europe['ADM0_A3']=='SVN'].iloc[0]),
+                                                          color='k', linewidth=0.2,connectionstyle="arc3,rad=-.6"))
+
+                # arrow for SVK inset
+                ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='SVK'].iloc[0]+2,
+                                                          europe['LABEL_Y'][europe['ADM0_A3']=='SVK'].iloc[0]),
+                                                          (europe['INSET_FIG_X'][europe['ADM0_A3']=='SVK'].iloc[0]-1.3,
+                                                          europe['INSET_FIG_Y'][europe['ADM0_A3']=='SVK'].iloc[0]-1.3),
+                                                          color='k', linewidth=0.2,connectionstyle="arc3,rad=.1"))
+                # country inset plots
+                for country_index in range(len(country_codes)):
+                    print('   Making inset ' + country_codes_3[country_index])
+                    ax_sub = inset_axes(ax, width=insetfig_size, height=insetfig_size, loc=10,
+                                        bbox_to_anchor=(europe[europe['ADM0_A3']==country_codes_3[country_index]]['INSET_FIG_X'],
+                                                        europe[europe['ADM0_A3']==country_codes_3[country_index]]['INSET_FIG_Y']),
+                                        bbox_transform=ax.transData)
+                    piedata = base[sector_thing][time_index,country_index,:]
+                    if insetType == 'brokendonut':
+                        addBrokenDonutPlot(piedata,ax_sub,halo=True)
+                        text=ax_sub.text(0,0,country_codes[country_index],color='gray',ha='center',va='center',weight='bold')
+                    else:
+                        addRelChangeStackedBarPlot(piedata,scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,:],ax_sub)
+                        text=ax_sub.text(0.3,0,country_codes[country_index],color='gray',ha='center',va='center',weight='bold')
+                    text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white',alpha=0.8),
+                                           path_effects.Normal()])
+
+                # color legend
+                ax_lgd = inset_axes(ax,width=subfig_size[0]*0.04,height=subfig_size[1]*0.4,loc='right')
+                norm.lgd = mcolors.Normalize(vmin=min_val*100, vmax=max_val*100)
+                sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm.lgd)
+                plt.colorbar(sm,cax=ax_lgd,location='left',shrink=0.01,
+                             label='change relative to baseline',
+                             format="%+.0f %%")
+
+                # title
+                ax.title.set_text(timestep)
+
+                # scale lines legend
+                ax_sub = inset_axes(ax, width=insetfig_size, height=insetfig_size, loc=10,
+                                    bbox_to_anchor=(ax.get_xlim()[0]+3,ax.get_ylim()[1]-5),
+                                    bbox_transform=ax.transData)
+                ax_sub.title.set_text('Relative Change')
+                limits = base_radius*(1+.09*rel_change_scaling)
+                ax_sub.set_xlim(-limits, limits)
+                ax_sub.set_ylim(-limits, limits)
+                ax_sub.axis('off')
+                sclLin_sty = ['--',':','-',':']
+                sclLin_wth = [1,1,1,1]
+                sclLin_rad = [-0.1,-0.05,0,0.05]
+                sclLin_col = ['gray','gray','k','gray']
+                sclLin_lab = ['-10%','-5%','','+5%']
+                shdCirc_rad = 0
+                shdCirc_lwd = [3,6,8,10,12,14,16,20,22,24,26,28,30]
+                textkw = dict(facecolor='white',linewidth=0,pad=1)
+                for i in range(len(sclLin_rad)):
+                    circle = plt.Circle((0,0), base_radius*(1+sclLin_rad[i]*rel_change_scaling), linestyle=sclLin_sty[i],
+                                        fill = False, edgecolor=sclLin_col[i], linewidth=sclLin_wth[i])
+                    ax_sub.add_patch(circle)
+                    txt=ax_sub.text(0,base_radius*(1+sclLin_rad[i]*rel_change_scaling),sclLin_lab[i],fontsize=10,
+                              backgroundcolor='white',color=sclLin_col[i],horizontalalignment='center',verticalalignment='center')
+                    txt.set_bbox(textkw)
+
+                # sector color legends
+                ax_sub = inset_axes(ax, width=insetfig_size, height=insetfig_size, loc=10,
+                                    bbox_to_anchor=(ax.get_xlim()[0]+10,ax.get_ylim()[1]-5),
+                                    bbox_transform=ax.transData)
+                wedges, texts = ax_sub.pie(np.ones(len(piedata)), colors=sector_colors, labels=sector_names,
+                                         wedgeprops=wedgeprops, counterclock=False, startangle=-270)
+                ax_sub.title.set_text('Sectors')
+
+                # save just the subplot
+                if not os.path.exists(figdir):
+                    os.makedirs(figdir)
+                fig.savefig(figdir+'/map-' + plotType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] +
+                            '_scenario_as_' + plotType + '_time_step_ ' + timestep + '.png',
+                            dpi=300,
+                            bbox_inches=ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted()).expanded(1.03, 1.06))
+                fig.savefig(figdir+'/map-' + plotType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] +
+                            '_scenario_as_' + plotType + '_time_step_ ' + timestep + '.pdf',
+                            bbox_inches=ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted()).expanded(1.03, 1.06))
+
+            # Hide unused subplots
+            for time_index in range(len(time_steps), nrows*ncols):  # Adjust the range if the grid size is changed
+                if(col==ncols):
+                    row+=1
+                    col=0
+                axes[row, col].axis('off')
+                col+=1
+
+            # display the plot
+            if showPlots: plt.show()
+
+            # save just the whole figure
+            figdir = basefigdir
+            if not os.path.exists(figdir):
+                os.makedirs(figdir)
+            fig.savefig(figdir+'/map-' + plotType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.png',
+                        dpi=300)
+            fig.savefig(figdir+'/map-' + plotType +'-'+ sector_thing + '_in_' + scenarios_names[scenario_index] + '_scenario_as_' + plotType + '.pdf')
+
+            plt.close(fig)
+
+
 
 #%% test
-
-# subfig_width =  15
-# subfig_height =  15
-# insetfig_size = min(subfig_width,subfig_height)*0.06
-# base_radius = 1
-
-# fig, axes = plt.subplots(1, 1, figsize=(subfig_width, subfig_height))
+# plotType = 'dif_rel'
+#
+# if plotType == 'abs':
+#     thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps),
+#                              thing:base[thing].flatten()})
+# if plotType == 'dif_rel':
+#     thing_df = pd.DataFrame({'time': np.repeat(time_steps, len(country_codes)), 'country': country_codes_3 * len(time_steps),
+#                              thing:scenarios_dif_rel[scenario_index][thing].flatten()})
+#
+#
+# # define colors
+# if plotType == 'abs':
+#     cmap = cmap_abs
+#     min_val, max_val = min(thing_df[thing]), max(thing_df[thing])
+# if plotType == 'dif_rel':
+#     cmap = cmap_rel
+# norm = mcolors.Normalize(vmin=min_val, vmax=max_val)
+# scenario_index = 1
+#
+# fig, axes = plt.subplots(1, 1, figsize=(subfig_size[0], subfig_size[1]))
+# plt.tight_layout()
 # fig.suptitle(thing + ' in ' + scenarios_names[scenario_index] + ' scenario as ' + plotType)
 # row = 1
 # col = 1
 # time_index, timestep = 5, 'Q5'
 # thing_df_1 = thing_df[thing_df['time']==timestep]
-
+#
 # # determine subfigure
 # ax = axes
-
+#
 # # create the plot
 # thing_df_1 = thing_df[thing_df['time']==timestep]
 # mergedData = europe.merge(thing_df_1, how='left', left_on='ADM0_A3', right_on='country')
-# mergedData.plot(column=thing, cmap=cmap, norm=norm,
+# mergedData.plot(column=thing, cmap=cmap, norm=norm,vmin=min_val,vmax=max_val,
 #                 edgecolor='black', linewidth=0.2,ax=ax)
-
+#
 # # custom axis
-# ax.set_xlim(-15, 35)
-# ax.set_ylim(32, 72)
+# ax.set_xlim(-10, 35)
+# ax.set_ylim(32, 67)
 # ax.axis('off')
-
-
-
-
+#
+#
+#
+#
 # # arrow for BEL inset
 # ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='BEL'].iloc[0],
 #                                           europe['LABEL_Y'][europe['ADM0_A3']=='BEL'].iloc[0]),
 #                                           (europe['INSET_FIG_X'][europe['ADM0_A3']=='BEL'].iloc[0],
 #                                           europe['INSET_FIG_Y'][europe['ADM0_A3']=='BEL'].iloc[0]-1.9),
 #                                           color='k', linewidth=0.2,connectionstyle="arc3,rad=-.3"))
-
+#
 # # arrow for LUX inset
 # ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='LUX'].iloc[0],
 #                                           europe['LABEL_Y'][europe['ADM0_A3']=='LUX'].iloc[0]),
 #                                           (europe['INSET_FIG_X'][europe['ADM0_A3']=='LUX'].iloc[0]+1.3,
 #                                           europe['INSET_FIG_Y'][europe['ADM0_A3']=='LUX'].iloc[0]-1.3),
 #                                           color='k', linewidth=0.2,connectionstyle="arc3,rad=-.3"))
-
+#
 # # arrow for SVN inset
 # ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='SVN'].iloc[0],
 #                                           europe['LABEL_Y'][europe['ADM0_A3']=='SVN'].iloc[0]),
 #                                           (europe['INSET_FIG_X'][europe['ADM0_A3']=='SVN'].iloc[0]+1.9,
 #                                           europe['INSET_FIG_Y'][europe['ADM0_A3']=='SVN'].iloc[0]),
 #                                           color='k', linewidth=0.2,connectionstyle="arc3,rad=-.6"))
-
+#
 # # arrow for SVK inset
 # ax.add_patch(patches.FancyArrowPatch((europe['LABEL_X'][europe['ADM0_A3']=='SVK'].iloc[0]+2,
 #                                           europe['LABEL_Y'][europe['ADM0_A3']=='SVK'].iloc[0]),
 #                                           (europe['INSET_FIG_X'][europe['ADM0_A3']=='SVK'].iloc[0]-1.3,
 #                                           europe['INSET_FIG_Y'][europe['ADM0_A3']=='SVK'].iloc[0]-1.3),
 #                                           color='k', linewidth=0.2,connectionstyle="arc3,rad=.1"))
-
+#
 # # country inset plots
 # for country_index in range(len(country_codes)):
 #     print('Making inset ' + country_codes_3[country_index])
@@ -913,68 +1147,60 @@ for scenario_index in scenariosToPlot:
 #                         bbox_to_anchor=(europe[europe['ADM0_A3']==country_codes_3[country_index]]['INSET_FIG_X'],
 #                                         europe[europe['ADM0_A3']==country_codes_3[country_index]]['INSET_FIG_Y']),
 #                         bbox_transform=ax.transData)
+#     text = ax_sub.text(0.3,0,country_codes[country_index],color='gray',ha='center',va='center',weight='bold')
+#     text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'),
+#                        path_effects.Normal()])
 #     piedata = base[sector_thing][time_index,country_index,:]
-#     addBrokenDonutPlot(piedata,ax_sub)
+#     addRelChangeStackedBarPlot(piedata,scenarios_dif_rel[scenario_index][sector_thing][time_index,country_index,:],ax_sub)
+#     # addBrokenDonutPlot(piedata,ax_sub,halo=True)
 #     # addRelChangePiePlot(piedata,ax_sub)
 #     # limits = 1+(0.09*rel_change_scaling)
 #     # ax_sub.set_xlim(-limits, limits)
 #     # ax_sub.set_ylim(-limits, limits)
 #     # ax_sub.axis('off')
-#     # ax_sub.add_patch(plt.Circle((0,0), base_radius*(1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-
-# # define range and values for the legend
-# value_ranges = np.arange(min_val,max_val,(max_val-min_val)/10).tolist()
-# labels = ['%.2f' % elem for elem in value_ranges]
-
-# # parameters of the legend
-# rectangle_width = 2
-# rectangle_height = 1.5
-# legend_x = 30
-# legend_y_start = 55
-# legend_y_step = 1.5
-
-# # create the legend
-# for i in range(len(labels)):
-#    value = (value_ranges[i]-min_val)/(max_val-min_val) # Normalize the value to [0, 1]
-#    color = cmap(value)
-#    ax.add_patch(plt.Rectangle((legend_x, legend_y_start - i * legend_y_step), rectangle_width, rectangle_height,
-#                               color=color, ec='black', lw=0.6))
-#    ax.text(legend_x + 2.5, legend_y_start - i * legend_y_step + 0.7, labels[i],
-#          fontsize=12, va='center')
-
+#     # circle = plt.Circle((0,0), base_radius*(1+0.05*rel_change_scaling), linestyle=':',
+#     #                             fill = False, edgecolor='gray', linewidth=1)
+#     # ax_sub.add_patch(circle)
+#     # shadowArgs = dict(alpha=0.3,antialiased = True, color='white',linewidth=10,linestyle='-')
+#     # ax_sub.add_patch(patches.Shadow(circle,0,0,shade=1,**shadowArgs))
+#
+# # color legend
+# ax_lgd = inset_axes(ax,width=subfig_size[0]*0.04,height=subfig_size[1]*0.4,loc='right')
+# sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+# plt.colorbar(sm,cax=ax_lgd,location='right',shrink=0.01)
+#
 # # title
 # ax.title.set_text(timestep)
-
+#
 # # scale lines legend
-# ax_sub = inset_axes(ax, width=insetfig_size*1.5, height=insetfig_size*1.5, loc=10,
+# ax_sub = inset_axes(ax, width=insetfig_size, height=insetfig_size, loc=10,
 #                     bbox_to_anchor=(ax.get_xlim()[0]+3,ax.get_ylim()[1]-5),
 #                     bbox_transform=ax.transData)
-# limits = 1+(0.09*rel_change_scaling)
+# ax_sub.title.set_text('Relative Change')
+# limits = base_radius*(1+.09*rel_change_scaling)
 # ax_sub.set_xlim(-limits, limits)
 # ax_sub.set_ylim(-limits, limits)
 # ax_sub.axis('off')
-# ax_sub.add_patch(plt.Circle((0,0), (1-0.1*rel_change_scaling), linestyle='--', fill = False, edgecolor='gray', linewidth=1))
-# ax_sub.add_patch(plt.Circle((0,0), (1-0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-# ax_sub.add_patch(plt.Circle((0,0), 1, linestyle='-', fill = False, edgecolor='k' ))
-# ax_sub.add_patch(plt.Circle((0,0), (1+0.05*rel_change_scaling), linestyle=':', fill = False, edgecolor='gray', linewidth=1))
-# ax_sub.title.set_text('Relative Change')
+# sclLin_sty = ['--',':','-',':']
+# sclLin_wth = [1,1,1,1]
+# sclLin_rad = [-0.1,-0.05,0,0.05]
+# sclLin_col = ['gray','gray','k','gray']
+# sclLin_lab = ['-10%','-5%','','+5%']
+# shdCirc_rad = 0
+# shdCirc_lwd = [3,6,8,10,12,14,16,20,22,24,26,28,30]
 # textkw = dict(facecolor='white',linewidth=0,pad=1)
-# txt=ax_sub.text(0,(1-0.11*rel_change_scaling),'-10%',fontsize=10,
-#           backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-# txt.set_bbox(textkw)
-# txt=ax_sub.text(0,(1-0.05*rel_change_scaling),'-5%',fontsize=10,
-#           backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-# txt.set_bbox(textkw)
-# # ax_sub.text(0,1,'reference',fontsize=10,
-# #           backgroundcolor='white',color='black',horizontalalignment='center',verticalalignment='center')
-# txt=ax_sub.text(0,(1+0.05*rel_change_scaling),'+5%',fontsize=10,
-#           backgroundcolor='white',color='gray',horizontalalignment='center',verticalalignment='center')
-# txt.set_bbox(textkw)
-
+# for i in range(len(sclLin_rad)):
+#     circle = plt.Circle((0,0), base_radius*(1+sclLin_rad[i]*rel_change_scaling), linestyle=sclLin_sty[i],
+#                         fill = False, edgecolor=sclLin_col[i], linewidth=sclLin_wth[i])
+#     ax_sub.add_patch(circle)
+#     txt=ax_sub.text(0,base_radius*(1+sclLin_rad[i]*rel_change_scaling),sclLin_lab[i],fontsize=10,
+#               backgroundcolor='white',color=sclLin_col[i],horizontalalignment='center',verticalalignment='center')
+#     txt.set_bbox(textkw)
+#
 # # sector color legends
-# ax_sub = inset_axes(ax, width=insetfig_size*1.5, height=insetfig_size*1.5, loc=10,
+# ax_sub = inset_axes(ax, width=insetfig_size, height=insetfig_size, loc=10,
 #                     bbox_to_anchor=(ax.get_xlim()[0]+10,ax.get_ylim()[1]-5),
 #                     bbox_transform=ax.transData)
 # wedges, texts = ax_sub.pie(np.ones(len(piedata)), colors=sector_colors, labels=sector_names,
-#                          wedgeprops=wedgeprops, counterclock=False, startangle=-270)
+#                           wedgeprops=wedgeprops, counterclock=False, startangle=-270)
 # ax_sub.title.set_text('Sectors')
