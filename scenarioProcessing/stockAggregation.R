@@ -7,7 +7,7 @@
 # Benjamin Blanz 2024
 # 
 
-sectorColPattern <- 'ALL|TOTAL|^[A-Z]$|AGR|MIN|MFG|EGW|CNS|TRD|OTP|WTP|CMN|OFI|OBS|REA|PUB|OSG'
+sectorColPattern <- 'ALL|TOTAL|^[A-Z]$|AGR|MIN|MFG|EGW|CNS|TRD|OTP|WTP|CMN|OFI|OBS|REA|PUB|OSG|agr|coa-oil-gas|pro|ely-elc|ser|air-wtp-tran'
 
 # read scenario file with NUTS3 data ####
 library(readxl)

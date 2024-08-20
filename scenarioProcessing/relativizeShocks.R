@@ -8,9 +8,11 @@
 source('funRelData.R')
 
 nuts3LevelStocksNACE <- read.csv("helperData/nuts3LevelStocksNACE.csv", row.names=NULL)
-nuts3LevelStocksGTAP <- read.csv("helperData/nuts3LevelStocksGTAP.csv", row.names=NULL)
 countryLevelStocksNACE <- read.csv("helperData/countryLevelStocksNACE.csv", row.names=NULL)
+nuts3LevelStocksGTAP <- read.csv("helperData/nuts3LevelStocksGTAP.csv", row.names=NULL)
 countryLevelStocksGTAP <- read.csv("helperData/countryLevelStocksGTAP.csv", row.names=NULL)
+nuts3LevelStocksGRACE <- read.csv("helperData/nuts3LevelStocksGRACE.csv", row.names=NULL)
+countryLevelStocksGRACE <- read.csv("helperData/countryLevelStocksGRACE.csv", row.names=NULL)
 
 
 files <- list.files('scenarios',pattern = 'csv',recursive = T)
@@ -23,7 +25,10 @@ for(f.i in 1:length(files)){
 	if(grepl('GTAP',file)){
 		data.rel <- relData(data,nuts3LevelStocksGTAP,countryLevelStocksGTAP)
 		write.csv(data.rel,gsub('.csv','-rel.csv',file),row.names = F)
-	}else{
+	} else if (grepl('GRACE',file)) {
+		data.rel <- relData(data,nuts3LevelStocksGRACE,countryLevelStocksGRACE)
+		write.csv(data.rel,gsub('.csv','-rel.csv',file),row.names = F)
+	} else {
 		data.rel <- relData(data,nuts3LevelStocksNACE,countryLevelStocksNACE)
 		write.csv(data.rel,gsub('.csv','-rel.csv',file),row.names = F)
 	}

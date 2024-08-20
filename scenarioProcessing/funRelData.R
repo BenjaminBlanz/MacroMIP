@@ -17,7 +17,7 @@
 # Benjamin Blanz 2024
 #
 relData <- function(data,stocksNUTS3=NULL,stocksCNT=NULL){
-	sectorColPattern <- 'ALL|TOTAL|^[A-Z]$|AGR|MIN|MFG|EGW|CNS|TRD|OTP|WTP|CMN|OFI|OBS|REA|PUB|OSG'
+	sectorColPattern <- 'ALL|TOTAL|^[A-Z]$|AGR|MIN|MFG|EGW|CNS|TRD|OTP|WTP|CMN|OFI|OBS|REA|PUB|OSG|agr|coa.oil.gas|pro|ely.elc|ser|air.wtp.tran'
 	# Ensure the Total clumn is called TOTAL, not ALL as in some scenarios
 	names(data)[names(data)=='ALL'] <- 'TOTAL'
 	names(stocksNUTS3)[names(stocksNUTS3)=='ALL'] <- 'TOTAL'

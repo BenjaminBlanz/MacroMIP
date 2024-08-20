@@ -9,7 +9,7 @@
 #   aggregated data
 #   
 aggregateNUTS3ToCountry <- function(data,codes){
-	sectorColPattern <- 'ALL|TOTAL|^[A-Z]$|AGR|MIN|MFG|EGW|CNS|TRD|OTP|WTP|CMN|OFI|OBS|REA|PUB|OSG'
+	sectorColPattern <- 'ALL|TOTAL|^[A-Z]$|AGR|MIN|MFG|EGW|CNS|TRD|OTP|WTP|CMN|OFI|OBS|REA|PUB|OSG|agr|coa.oil.gas|pro|ely.elc|ser|air.wtp.tran'
 	# identify columns with data rather than identifiers
 	sectorCols <- grep(sectorColPattern,names(data),perl = T)
 	# convert data to numeric (deals with in import error)
