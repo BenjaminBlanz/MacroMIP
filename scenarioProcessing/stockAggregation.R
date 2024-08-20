@@ -1,8 +1,13 @@
 # 
-# Aggregate NUTS3 scenario data to country level
+# Aggregate NUTS3 scenario stock data to country level
 # 
 # library(sf)
-# worldAdmin1 <- read_sf('scenarios/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp')
+# worldAdmin1 <- read_sf('scenarios/ne_10m_admin_1_states_provinces/ne_10m_admin_1_states_provinces.shp') 
+# 
+# Benjamin Blanz 2024
+# 
+
+sectorColPattern <- 'ALL|TOTAL|^[A-Z]$|AGR|MIN|MFG|EGW|CNS|TRD|OTP|WTP|CMN|OFI|OBS|REA|PUB|OSG'
 
 # read scenario file with NUTS3 data ####
 library(readxl)
@@ -37,7 +42,7 @@ sink('helperData/nuts3LevelStocksMetadata.csv')
 cat(sprintf('Unit %s,,\n',stockUnit))
 cat(sprintf('Labels,, \n'))
 cat(sprintf('Sector,Label,Type\n'))
-sectorCols <- grep('ALL|TOTAL|^[A-Z]$',names(stocksNUTS3),perl = T)
+sectorCols <- grep(sectorColPattern,names(stocksNUTS3),perl = T)
 for(n in colnames(stocksNUTS3)[sectorCols]){	
 	cat(sprintf('"%s", "%s", "%s"\n',n,stockLabels[n],stockTypes[n]))
 }
@@ -45,7 +50,7 @@ sink()
 
 
 # aggregate to country level
-sectorCols <- grep('ALL|TOTAL|^[A-Z]$',names(stocksNUTS3),perl = T)
+sectorCols <- grep(sectorColPattern,names(stocksNUTS3),perl = T)
 stocksCNT <- aggregate(stocksNUTS3[,sectorCols],
 											 by = list(Category=stocksNUTS3$CNTR_CODE),FUN=sum)
 colnames(stocksCNT)[1] <- 'CNTR_CODE'
@@ -65,7 +70,7 @@ sink('helperData/countryLevelStocksMetadata.csv')
 cat(sprintf('Unit %s,,\n',stockUnit))
 cat(sprintf('Labels,, \n'))
 cat(sprintf('Sector,Label,Type\n'))
-sectorCols <- grep('ALL|TOTAL|^[A-Z]$',names(stocksNUTS3),perl = T)
+sectorCols <- grep(sectorColPattern,names(stocksNUTS3),perl = T)
 for(n in colnames(stocksNUTS3)[sectorCols]){	
 	cat(sprintf('"%s", "%s", "%s"\n',n,stockLabels[n],stockTypes[n]))
 }

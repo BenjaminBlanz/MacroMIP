@@ -1,6 +1,8 @@
 #
 # aggregate the flood2010 and earthquake scenarios to country level
-# 
+#
+# Benjamin Blanz 2024
+#
 
 source('funAggregateNuts2CNT.R')
 codes <- read.csv("helperData/nuts3fid4Codes.csv")
